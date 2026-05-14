@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+
+# Data files (too large for GitHub)
+train_data/
+testA_data/
+testB_data/
+*.zip
+used_car_train_20200313.csv.zip
+used_car_testA_20200313.csv.zip
+used_car_testB_20200421.zip
+
+# Output files
+used_car_submit.csv
+used_car_testA_predict.csv
+used_car_testB_predict.csv
+*.log
+output.log
+run_output.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+__MACOSX/
+
+# CatBoost
+catboost_info/
