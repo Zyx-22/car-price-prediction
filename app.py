@@ -177,7 +177,7 @@ st.markdown("""
 
 
 # ==================== 数据加载 ====================
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load_data():
     return {
         "train": {"rows": 150000, "cols": 31, "price_mean": 5923.33, "price_median": 3250, "price_std": 7502, "price_min": 11, "price_max": 99999},
@@ -191,7 +191,7 @@ def load_data():
 
 data = load_data()
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load_submit_data():
     submit_file = "used_car_submit.csv"
     if os.path.exists(submit_file):
@@ -200,7 +200,7 @@ def load_submit_data():
 
 submit_df = load_submit_data()
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load_train_sample():
     train_file = "train_data/used_car_train_20200313.csv"
     if os.path.exists(train_file):
