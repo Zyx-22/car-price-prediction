@@ -392,92 +392,97 @@ elif page == " 数据集分析":
         fig_pie.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig_pie)
 
-    # 新增三个动态交互式图表
+    # 新增三个动态交互式图表 - 优化排版
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">价格分布直方图</p>', unsafe_allow_html=True)
-    st.info("展示训练集价格的详细分布情况，帮助理解数据偏态和异常值")
+    st.info("展示二手车交易价格的详细分布情况，呈现明显的右偏态分布特征")
     
-    # 直方图：使用submit数据或模拟数据
+    # 直方图：使用真实数据或模拟数据
     if train_df is not None and 'price' in train_df.columns:
-        price_data = train_df['price']
+        price_data = train_df['price'].tolist()
     else:
-        # 模拟符合实际分布的价格数据（右偏态分布）
         np.random.seed(42)
-        price_data = np.random.exponential(scale=4000, size=50000).clip(11, 99999)
+        price_data = list(np.random.exponential(scale=4000, size=50000).clip(11, 99999))
     
+    # 将数据放入DataFrame确保Plotly正确解析
+    hist_df = pd.DataFrame({'price': price_data})
     fig_hist = px.histogram(
-        x=price_data, nbins=50,
-        labels={'x': '二手车价格', 'count': '样本数量'},
-        color_discrete_sequence=['#6b8cce'],
-        height=450
+        hist_df, x='price', nbins=50,
+        color_discrete_sequence=['#4a90d9'],
+        height=350
     )
     fig_hist.update_layout(
-        margin=dict(l=60, r=20, t=40, b=50),
+        margin=dict(l=50, r=20, t=30, b=40),
         showlegend=False,
-        xaxis_title="二手车价格",
-        yaxis_title="样本数量",
-        title=dict(text="二手车交易价格分布直方图", x=0.5, font=dict(size=16))
+        xaxis_title=dict(text="二手车价格", font=dict(size=12)),
+        yaxis_title=dict(text="样本数量", font=dict(size=12)),
+        title=dict(text="二手车交易价格分布直方图", x=0.5, font=dict(size=15)),
+        plot_bgcolor='white',
+        xaxis=dict(showgrid=True, gridcolor='#f0f0f0'),
+        yaxis=dict(showgrid=True, gridcolor='#f0f0f0')
     )
+    fig_hist.update_traces(marker=dict(line=dict(color='white', width=0.5)))
     st.plotly_chart(fig_hist, use_container_width=True)
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">车龄与价格关系散点图</p>', unsafe_allow_html=True)
-    st.info("探索车辆使用年限与销售价格之间的关系，验证折旧规律")
+    st.info("展示车辆使用年限与销售价格的负相关关系，车龄越大价格越低")
     
-    # 散点图：模拟车龄与价格数据（展示折旧规律）
+    # 散点图：模拟车龄与价格数据
     np.random.seed(42)
-    n_points = 3000
-    car_ages = np.random.uniform(0, 25, n_points)
-    # 价格随车龄指数衰减 + 随机波动
-    base_prices = np.random.uniform(5000, 30000, n_points)
-    prices = base_prices * np.exp(-0.08 * car_ages) + np.random.normal(0, 2000, n_points)
-    prices = np.maximum(prices, 500).clip(0, 80000)
+    n_pts = 2000
+    ages = list(np.random.uniform(0, 25, n_pts))
+    base = list(np.random.uniform(8000, 35000, n_pts))
+    prices = [b * np.exp(-0.08 * a) + np.random.normal(0, 1500) for a, b in zip(ages, base)]
+    prices = [max(500, min(p, 80000)) for p in prices]
     
-    scatter_df = pd.DataFrame({'car_age': car_ages, 'price': prices})
+    scatter_df = pd.DataFrame({'车龄（年）': ages, '价格': prices})
     
     fig_scatter = px.scatter(
-        scatter_df, x='car_age', y='price',
-        labels={'car_age': '车龄（年）', 'price': '价格'},
-        opacity=0.6,
+        scatter_df, x='车龄（年）', y='价格',
         color_discrete_sequence=['#e89b5f'],
-        height=450
+        height=350
     )
     fig_scatter.update_layout(
-        margin=dict(l=60, r=20, t=40, b=50),
-        xaxis_title="车龄（年）",
-        yaxis_title="价格",
-        title=dict(text="车龄与二手车价格关系散点图", x=0.5, font=dict(size=16)),
-        xaxis=dict(range=[0, 25]),
-        yaxis=dict(range=[0, 80000])
+        margin=dict(l=50, r=20, t=30, b=40),
+        xaxis_title=dict(text="车龄（年）", font=dict(size=12)),
+        yaxis_title=dict(text="价格", font=dict(size=12)),
+        title=dict(text="车龄与二手车价格关系散点图", x=0.5, font=dict(size=15)),
+        plot_bgcolor='white',
+        xaxis=dict(showgrid=True, gridcolor='#f0f0f0', range=[0, 25]),
+        yaxis=dict(showgrid=True, gridcolor='#f0f0f0', range=[0, 80000])
     )
+    fig_scatter.update_traces(marker=dict(size=5, opacity=0.6))
     st.plotly_chart(fig_scatter, use_container_width=True)
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">品牌平均价格对比</p>', unsafe_allow_html=True)
-    st.info("展示各品牌的平均二手车价格，识别高价值品牌和性价比品牌")
+    st.markdown('<p class="section-title">价格区间分布对比</p>', unsafe_allow_html=True)
+    st.info("统计各价格区间的样本数量，反映二手车市场的主流价格带")
     
-    # 品牌图：使用价格区间分布数据
-    bins = data.get("price_bins", ["0-500", "500-1k", "1k-2k", "2k-3k", "3k-5k", "5k-1w", "1w-2w", "2w-5w", "5w+"])
-    train_counts = data.get("train_dist", {})
-    counts = [train_counts.get(b, 0) for b in bins]
+    # 使用project_data.json中的真实价格区间分布
+    bins = ["0-500", "500-1k", "1k-2k", "2k-3k", "3k-5k", "5k-1w", "1w-2w", "2w-5w", "5w+"]
+    counts = [data.get("train_dist", {}).get(b, 0) for b in bins]
     
-    brand_df = pd.DataFrame({'价格区间': bins, '样本数量': counts})
+    bar_df = pd.DataFrame({'价格区间': bins, '样本数量': counts})
     
-    fig_brand = px.bar(
-        brand_df, x='价格区间', y='样本数量',
-        labels={'价格区间': '价格区间', '样本数量': '样本数量'},
+    fig_bar = px.bar(
+        bar_df, x='价格区间', y='样本数量',
         color='样本数量',
         color_continuous_scale='greens',
-        height=450
+        height=350
     )
-    fig_brand.update_layout(
-        margin=dict(l=60, r=20, t=40, b=50),
-        xaxis_title="价格区间",
-        yaxis_title="样本数量",
-        title=dict(text="各价格区间样本数量对比图", x=0.5, font=dict(size=16)),
+    fig_bar.update_layout(
+        margin=dict(l=50, r=20, t=30, b=60),
+        xaxis_title=dict(text="价格区间", font=dict(size=12)),
+        yaxis_title=dict(text="样本数量", font=dict(size=12)),
+        title=dict(text="各价格区间样本数量对比", x=0.5, font=dict(size=15)),
+        plot_bgcolor='white',
+        xaxis=dict(showgrid=False, tickangle=-45),
+        yaxis=dict(showgrid=True, gridcolor='#f0f0f0'),
         showlegend=False
     )
-    st.plotly_chart(fig_brand, use_container_width=True)
+    fig_bar.update_traces(marker_line_color='white', marker_line_width=0.5)
+    st.plotly_chart(fig_bar, use_container_width=True)
 
 
 # ==================== 页面3: 特征工程 ====================
