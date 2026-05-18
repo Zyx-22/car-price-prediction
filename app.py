@@ -387,58 +387,21 @@ elif page == " 数据集分析":
         fig_pie.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig_pie)
 
-    # 新增三个图表
+    # 新增三个图表（使用已有matplotlib生成的图片）
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">价格分布直方图</p>', unsafe_allow_html=True)
     st.info("展示训练集价格的详细分布情况，帮助理解数据偏态和异常值")
-    
-    if train_df is not None and 'price' in train_df.columns:
-        fig_hist = px.histogram(train_df, x='price', nbins=100,
-                               labels={'price': '价格'},
-                               color_discrete_sequence=['#7c3aed'],
-                               height=400)
-        fig_hist.update_layout(margin=dict(l=20, r=20, t=20, b=20), showlegend=False)
-        st.plotly_chart(fig_hist, use_container_width=True)
+    st.image("1_价格分布.png", use_container_width=True)
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">车龄与价格关系散点图</p>', unsafe_allow_html=True)
     st.info("探索车辆使用年限与销售价格之间的关系，验证折旧规律")
-    
-    if train_df is not None and 'regDate' in train_df.columns:
-        train_with_age = train_df.copy()
-        train_with_age['car_age'] = 2026 - (train_with_age['regDate'].astype(str).str[:4].astype(int))
-        
-        # 采样以避免过度绘制（取5000个点）
-        if len(train_with_age) > 5000:
-            sample_df = train_with_age.sample(n=5000, random_state=42)
-        else:
-            sample_df = train_with_age
-        
-        fig_scatter = px.scatter(sample_df, x='car_age', y='price',
-                                labels={'car_age': '车龄（年）', 'price': '价格'},
-                                opacity=0.6,
-                                color_discrete_sequence=['#10b981'],
-                                height=450)
-        fig_scatter.update_layout(margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_scatter, use_container_width=True)
+    st.image("2_车龄价格.png", use_container_width=True)
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">品牌平均价格对比</p>', unsafe_allow_html=True)
     st.info("展示各品牌的平均二手车价格，识别高价值品牌和性价比品牌")
-    
-    if train_df is not None and 'brand' in train_df.columns and 'price' in train_df.columns:
-        brand_avg = train_df.groupby('brand')['price'].mean().reset_index()
-        brand_avg.columns = ['品牌', '平均价格']
-        brand_avg = brand_avg.sort_values('平均价格', ascending=False).head(20)  # Top 20品牌
-        
-        fig_brand = px.bar(brand_avg.iloc[::-1], x='平均价格', y='品牌',
-                          orientation='h',
-                          labels={'平均价格': '平均价格', '品牌': '品牌'},
-                          color='平均价格',
-                          color_continuous_scale='PuRd',
-                          height=500)
-        fig_brand.update_layout(margin=dict(l=120, r=20, t=20, b=20), showlegend=False)
-        st.plotly_chart(fig_brand, use_container_width=True)
+    st.image("3_品牌均价.png", use_container_width=True)
 
 
 # ==================== 页面3: 特征工程 ====================
