@@ -387,11 +387,6 @@ elif page == " 数据集分析":
         fig_pie.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig_pie)
 
-    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">原始特征预览（前10行）</p>', unsafe_allow_html=True)
-    if train_df is not None:
-        st.dataframe(train_df.head(10))
-
     # 新增三个图表
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">价格分布直方图</p>', unsafe_allow_html=True)
@@ -399,37 +394,33 @@ elif page == " 数据集分析":
     
     if train_df is not None and 'price' in train_df.columns:
         fig_hist = px.histogram(train_df, x='price', nbins=100,
-                               title='价格分布直方图',
                                labels={'price': '价格'},
                                color_discrete_sequence=['#7c3aed'],
                                height=400)
-        fig_hist.update_layout(margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
+        fig_hist.update_layout(margin=dict(l=20, r=20, t=20, b=20), showlegend=False)
         st.plotly_chart(fig_hist, use_container_width=True)
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">车龄与价格关系散点图</p>', unsafe_allow_html=True)
     st.info("探索车辆使用年限与销售价格之间的关系，验证折旧规律")
     
-    if train_df is not None:
-        # 计算车龄（假设当前年份为2026）
-        if 'regDate' in train_df.columns:
-            train_with_age = train_df.copy()
-            train_with_age['car_age'] = 2026 - (train_with_age['regDate'].astype(str).str[:4].astype(int))
-            
-            # 采样以避免过度绘制（取5000个点）
-            if len(train_with_age) > 5000:
-                sample_df = train_with_age.sample(n=5000, random_state=42)
-            else:
-                sample_df = train_with_age
-            
-            fig_scatter = px.scatter(sample_df, x='car_age', y='price',
-                                    title='车龄 vs 价格',
-                                    labels={'car_age': '车龄（年）', 'price': '价格'},
-                                    opacity=0.6,
-                                    color_discrete_sequence=['#10b981'],
-                                    height=450)
-            fig_scatter.update_layout(margin=dict(l=20, r=20, t=40, b=20))
-            st.plotly_chart(fig_scatter, use_container_width=True)
+    if train_df is not None and 'regDate' in train_df.columns:
+        train_with_age = train_df.copy()
+        train_with_age['car_age'] = 2026 - (train_with_age['regDate'].astype(str).str[:4].astype(int))
+        
+        # 采样以避免过度绘制（取5000个点）
+        if len(train_with_age) > 5000:
+            sample_df = train_with_age.sample(n=5000, random_state=42)
+        else:
+            sample_df = train_with_age
+        
+        fig_scatter = px.scatter(sample_df, x='car_age', y='price',
+                                labels={'car_age': '车龄（年）', 'price': '价格'},
+                                opacity=0.6,
+                                color_discrete_sequence=['#10b981'],
+                                height=450)
+        fig_scatter.update_layout(margin=dict(l=20, r=20, t=20, b=20))
+        st.plotly_chart(fig_scatter, use_container_width=True)
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="section-title">品牌平均价格对比</p>', unsafe_allow_html=True)
@@ -442,12 +433,11 @@ elif page == " 数据集分析":
         
         fig_brand = px.bar(brand_avg.iloc[::-1], x='平均价格', y='品牌',
                           orientation='h',
-                          title='Top 20 品牌平均价格',
                           labels={'平均价格': '平均价格', '品牌': '品牌'},
                           color='平均价格',
                           color_continuous_scale='PuRd',
                           height=500)
-        fig_brand.update_layout(margin=dict(l=120, r=20, t=40, b=20), showlegend=False)
+        fig_brand.update_layout(margin=dict(l=120, r=20, t=20, b=20), showlegend=False)
         st.plotly_chart(fig_brand, use_container_width=True)
 
 
@@ -765,11 +755,9 @@ elif page == " 在线预测":
     with col1:
         brand = st.selectbox("品牌编码", range(0, 50), index=10, help="车辆品牌编码（0-49）")
         model = st.number_input("车型编码", min_value=0, max_value=500, value=50, step=1, help="车型唯一编码")
-        bodyType = st.selectbox("车身类型", [0, 1, 2, 3, 4, 5, 6, 7], index=0, 
-                               help="0:轿车, 1:SUV, 2:MPV, 3:跑车, 4:货车, 5:客车, 6:皮卡, 7:其他")
-        fuelType = st.selectbox("燃油类型", [0, 1, 2, 3], index=0,
-                               help="0:汽油, 1:柴油, 2:混合动力, 3:电动")
-        gearbox = st.selectbox("变速箱", [0, 1], index=0, help="0:手动, 1:自动")
+        bodyType_label = st.selectbox("车身类型", ["轿车", "SUV", "MPV", "跑车", "货车", "客车", "皮卡", "其他"], index=0)
+        fuelType_label = st.selectbox("燃油类型", ["汽油", "柴油", "混合动力", "电动"], index=0)
+        gearbox_label = st.selectbox("变速箱", ["手动", "自动"], index=0)
         power = st.slider("马力/功率", min_value=0, max_value=600, value=120, help="发动机马力或功率")
     
     with col2:
@@ -784,6 +772,15 @@ elif page == " 在线预测":
     # 预测按钮
     if st.button("🔮 开始预测", type="primary", use_container_width=True):
         try:
+            # 将中文选项映射回数值
+            bodyType_map = {"轿车": 0, "SUV": 1, "MPV": 2, "跑车": 3, "货车": 4, "客车": 5, "皮卡": 6, "其他": 7}
+            fuelType_map = {"汽油": 0, "柴油": 1, "混合动力": 2, "电动": 3}
+            gearbox_map = {"手动": 0, "自动": 1}
+            
+            bodyType = bodyType_map[bodyType_label]
+            fuelType = fuelType_map[fuelType_label]
+            gearbox = gearbox_map[gearbox_label]
+            
             # 计算衍生特征
             car_age = 2026 - reg_year
             
